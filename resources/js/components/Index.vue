@@ -18,23 +18,24 @@
                             Загрузить курс валют по определённой дате
                         </button>
                     </div>
-                    <div class="col-3 d-flex flex-column">
-                        <button
-                            class="btn btn-dark mt-auto"
-                            @click="downloadExchange"
-                        >
-                            Загрузить курс валют за 180 дней
-                        </button>
-                    </div>
                 </div>
                 <div class="row pb-4 pt-4">
                     <div class="col-4">
                         <span>Дата для отображения курса</span>
-                        <input v-model="dateShow" type="date" class="form-control" />
+                        <input
+                            v-model="dateShow"
+                            type="date"
+                            class="form-control"
+                            @change="getExchangeRates"
+                        />
                     </div>
                     <div class="col-4">
                         <span>Выбор Валюты</span>
-                        <select v-model="currency" class="form-control">
+                        <select
+                            v-model="currency"
+                            class="form-control"
+                            @change="getExchangeRates"
+                        >
                             <option
                                 v-for="currencyOption in currencyOptions"
                                 :value="currencyOption.charCode"
@@ -45,27 +46,37 @@
                         </select>
                     </div>
                 </div>
-                <div class="row">
-                    <h2>Центральный банк Российской Федерации установил с {{ new Date(dateShow).toLocaleDateString('ru-RU') }} следующие курсы валют</h2>
-                </div>
-                <div class="row pb-4 pt-4">
+                <div v-if="0 < exchangeRates.length" class="row pb-4 pt-4">
+                    <div class="row">
+                        <h2>Центральный банк Российской Федерации установил с {{ new Date(dateShow).toLocaleDateString('ru-RU') }} следующие курсы валют</h2>
+                    </div>
                     <table class="table table-striped table-sm mt-4">
                         <thead>
-                        <tr>
-                            <th>Цифр. код</th>
-                            <th>Букв. код</th>
-                            <th>Валюта</th>
-                            <th>Курс</th>
-                        </tr>
+                            <tr>
+                                <th>Цифр. код</th>
+                                <th>Букв. код</th>
+                                <th>Валюта</th>
+                                <th>Курс</th>
+                            </tr>
                         </thead>
                         <tbody>
-                            <tr>
+                            <tr
+                                v-for="exchangeRate in exchangeRates"
+                            >
+                                <th>{{exchangeRate['currency']['numCode']}}</th>
+                                <th>{{exchangeRate['charCode']}}</th>
+                                <th>{{exchangeRate['currency']['name']}}</th>
+                                <th>
+                                    {{exchangeRate['rate']}} ({{(0 < exchangeRate['difference']) ? '+' : ''}}{{exchangeRate['difference']}})
+                                </th>
 
                             </tr>
                         </tbody>
                     </table>
                 </div>
-
+                <div v-else class="row pb-4 pt-4">
+                    <h2>Для просмотра курсов на {{this.dateShow}} укажите дату и загрузите</h2>
+                </div>
             </div>
         </div>
     </div>
@@ -83,11 +94,13 @@ export default {
             dateShow: '',
             currency: 'RUB',
             currencyOptions: [],
+            exchangeRates: [],
         };
     },
     mounted(){
         this.getCurrenciesOptions();
         this.getTomorrowDate();
+        this.getExchangeRates();
     },
     methods: {
         downloadExchange() {
@@ -95,18 +108,21 @@ export default {
                 date: this.dateDownload
             })
                 .then(({data}) => {
-                    console.log(data)
+                    this.dateShow = this.dateDownload
+                    this.getExchangeRates()
                 })
                 .catch((error) => {
                     console.error(error);
                 });
         },
-        getExchange() {
-            axios.post('/api/exchange/get', {
-                date: this.dateShow
+        getExchangeRates() {
+            axios.post('/api/exchange/get_rates', {
+                date: this.dateShow,
+                currency: this.currency
             })
                 .then(({data}) => {
                     console.log(data)
+                    this.exchangeRates = data.exchangeRates
                 })
                 .catch((error) => {
                     console.error(error);
@@ -132,7 +148,7 @@ export default {
 
             this.dateDownload = today.toISOString().slice(0, 10)
             this.dateShow = today.toISOString().slice(0, 10)
-        }
+        },
     },
 }
 </script>

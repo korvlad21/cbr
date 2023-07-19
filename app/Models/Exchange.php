@@ -17,5 +17,11 @@ class Exchange extends Model
         'charCode',
         'nominal',
         'rate',
+        'difference'
     ];
+
+    public function currency(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Currency::class, 'charCode', 'charCode');
+    }
 }

@@ -2,21 +2,28 @@
 
 namespace App\Helper;
 
+use App\Http\Resources\ExchangeResource;
+use App\Models\Currency;
 use App\Models\Exchange;
 use App\Repositories\ExchangeRepositoryInterface;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 class ExchangeHelper
 {
 
-    protected $exchangeRepository;
+    protected ExchangeRepositoryInterface $exchangeRepository;
 
     public function __construct(ExchangeRepositoryInterface $exchangeRepository)
     {
         $this->exchangeRepository = $exchangeRepository;
     }
+
     /**
+     * @param string $date
+     * @param bool $beforeTradeDay
      * @return array
      */
     public function getExchangeOnDate(string $date, bool $beforeTradeDay = false): array
@@ -52,13 +59,14 @@ class ExchangeHelper
             }
         }
         catch (\Throwable $e) {
-            dd($e);
             return [];
         }
     }
 
     /**
-     * @return array
+     * @param array $exchanges
+     * @param array $exchangesBeforeTradeDay
+     * @return bool
      */
     public function insert(array $exchanges, array $exchangesBeforeTradeDay): bool
     {
@@ -71,16 +79,100 @@ class ExchangeHelper
             return true;
 
         } catch (\Throwable $e) {
-            dd($e);
             return false;
         }
     }
 
     /**
+     * @param array $exchanges
+     * @param array $exchangesBeforeOneDay
      * @return float
      */
-    public function getDifference(array $exchanges, array $exchangesBeforeOneDay): float
+    private function getDifference(array $exchanges, array $exchangesBeforeOneDay): float
     {
-        return $exchangesBeforeOneDay['nominal'] * $exchangesBeforeOneDay['rate'] - $exchanges['nominal'] * $exchanges['rate'];
+        return $exchanges['rate'] / $exchanges['nominal'] - $exchangesBeforeOneDay['rate'] / $exchangesBeforeOneDay['nominal'];
     }
+
+    /**
+     * @param string $date
+     * @param string $currency
+     * @return array
+     */
+    public function getExchangeRates(string $date, string $currency): array
+    {
+        try {
+            $exchangeRates = $this->exchangeRepository->getOnDate($date)->toArray();
+
+            if (Currency::CHARCODE_RUB !== $currency) {
+                $exchangeRates = $this->convertCurrencyExchange($exchangeRates, $currency);
+            }
+
+            Cache::put(
+                'exchange_rates_'.date('Y-m-d').'_currency_'.$currency,
+                ExchangeResource::collection($exchangeRates),
+                60*60*24
+            );
+
+            return $exchangeRates;
+        } catch (\Throwable $e) {
+            dd($e);
+        }
+    }
+
+    /**
+     * @param Collection $exchangeRates
+     * @param string $currency
+     * @return float
+     */
+    private function convertCurrencyExchange(Collection $exchangeRates, string $currency): array
+    {
+        $convertExchangeRates = [];
+        $rateCurrencyDivisionRub = $exchangeRates->where('charCode', $currency);
+        foreach ($exchangeRates as $exchangeRate) {
+
+            $convertExchangeRates[] = ($currency === $exchangeRate->charCode)
+                ? $this->getRevertCurrency($rateCurrencyDivisionRub)
+                : $this->getConvertCurrency($rateCurrencyDivisionRub, $exchangeRate);
+        }
+        return $convertExchangeRates;
+    }
+
+    /**
+     * @param Collection $rateCurrencyDivisionRub
+     * @return float
+     */
+    private function getRevertCurrency(Collection $rateCurrencyDivisionRub): array
+    {
+        return [
+            'charCode' => Currency::CHARCODE_RUB,
+            'nominal' => 1,
+            'rate' => 1 / ($rateCurrencyDivisionRub->rate / $rateCurrencyDivisionRub->nominal),
+            'difference' => 1 / $rateCurrencyDivisionRub->difference,
+            'currency' => [
+                'numCode' => Currency::NUMCODE_RUB,
+                'name' => Currency::NAME_RUB
+            ]
+        ];
+    }
+
+    /**
+     * @param Collection $rateCurrencyDivisionRub
+     * @param Exchange $exchangeRate
+     * @return array
+     */
+    private function getConvertCurrency(Collection $rateCurrencyDivisionRub, Exchange $exchangeRate): array
+    {
+        return [
+            'charCode' => $exchangeRate->charCode,
+            'nominal' => 1,
+            'rate' => ($rateCurrencyDivisionRub->rate / $rateCurrencyDivisionRub->nominal) / ($exchangeRate->rate / $exchangeRate->nominal),
+            'difference' => $rateCurrencyDivisionRub->difference / $exchangeRate->difference,
+            'currency' => [
+                'numCode' => $exchangeRate->currency->numCode,
+                'name' => $exchangeRate->currency->name
+            ]
+        ];
+    }
+
+
 }

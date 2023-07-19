@@ -20,6 +20,8 @@ return new class extends Migration
                 ->on('currencies');
             $table->unsignedMediumInteger('nominal')->default(1);
             $table->double('rate');
+            $table->double('difference');
+            $table->index('date');
 
             $table->timestamps();
         });

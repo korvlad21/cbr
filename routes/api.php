@@ -23,6 +23,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::prefix('exchange')->group(function () {
     Route::controller(ExchangeController::class)->group(function () {
         Route::post('download', 'download');
+        Route::post('get_rates', 'getRates');
     });
 });
 Route::prefix('currency')->group(function () {

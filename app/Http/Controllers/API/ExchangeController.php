@@ -4,12 +4,14 @@ namespace App\Http\Controllers\API;
 
 use App\Helper\ExchangeHelper;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\CurrencyResource;
 use App\Models\Event;
 use App\Repositories\ExchangeRepository;
 use App\Repositories\ExchangeRepositoryInterface;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 
@@ -34,28 +36,42 @@ class ExchangeController extends Controller
         ]);
 
         if ($validator->fails()) {
-
             return response()->json(['success'=> false, 'errors' => $validator->errors()]);
-
-        } else {
-
-            $date = $request->input('date');
-
         }
+
+        $date = $request->input('date');
 
         $exchangeHelper = new ExchangeHelper($this->exchangeRepository);
 
         $exchanges = $exchangeHelper->getExchangeOnDate($date);
-
         $exchangesBeforeTradeDay = $exchangeHelper->getExchangeOnDate(
             date('Y-m-d', strtotime($date . ' -1 day')),
             true
         );
 
-
-
         return ($exchangeHelper->insert($exchanges, $exchangesBeforeTradeDay))
             ? response()->json(['success'=> true])
             : response()->json(['success'=> false, 'message' => 'Возникла ошибка']);
     }
+    public function getRates(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'date' => 'required|date',
+            'currency' => 'required|string'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success'=> false, 'errors' => $validator->errors()]);
+        }
+
+        $date = $request->input('date');
+        $currency = $request->input('currency');
+
+        $exchangeHelper = new ExchangeHelper($this->exchangeRepository);
+
+        return response()->json([
+            'exchangeRates'=> $exchangeHelper->getExchangeRates($date, $currency),
+        ]);
+    }
+
 }

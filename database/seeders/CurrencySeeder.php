@@ -11,7 +11,7 @@ use Mockery\Exception;
 
 class CurrencySeeder extends Seeder
 {
-    protected $currencyRepository;
+    protected CurrencyRepositoryInterface $currencyRepository;
 
     public function __construct(CurrencyRepositoryInterface $currencyRepository)
     {
@@ -25,9 +25,9 @@ class CurrencySeeder extends Seeder
         $currencyHelper = new CurrencyHelper();
         $cbrCurrencies = $currencyHelper->getCurrenciesResponse();
         $cbrCurrencies[] = [
-            'charCode' => 'RUB',
-            'name' => 'Российский рубль',
-            'numCode' => 643,
+            'charCode' => Currency::CHARCODE_RUB,
+            'name' => Currency::NAME_RUB,
+            'numCode' => Currency::NUMCODE_RUB,
         ];
         $currenciesCode = [];
         foreach ($cbrCurrencies as $cbrCurrency) {

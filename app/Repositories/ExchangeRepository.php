@@ -24,19 +24,6 @@ class ExchangeRepository implements ExchangeRepositoryInterface
         $this->model->created($data);
     }
 
-    public function update($id, array $data)
-    {
-        $exchange = $this->getByC($id);
-        $exchange->update($data);
-        return $exchange;
-    }
-
-    public function delete($id)
-    {
-        $exchange = $this->getById($id);
-        return $exchange->delete();
-    }
-
     public function updateOrCreate(array $data)
     {
         $this->model->updateOrCreate([
@@ -44,5 +31,10 @@ class ExchangeRepository implements ExchangeRepositoryInterface
             ],
             $data
         );
+    }
+
+    public function getOnDate(string $date)
+    {
+        return $this->model->with(['currency'])->where('date', $date)->get();
     }
 }
