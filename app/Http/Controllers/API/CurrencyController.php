@@ -27,6 +27,7 @@ class CurrencyController extends Controller
     public function get()
     {
         $currencyOptions = $this->currencyRepository->getAll();
+
         return response()->json([
             'currencyOptions'=> CurrencyResource::collection($currencyOptions),
         ]);

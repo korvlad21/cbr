@@ -48,12 +48,13 @@ class ExchangeController extends Controller
         $exchanges = $exchangeHelper->getExchangeOnDate($date);
 
         $exchangesBeforeTradeDay = $exchangeHelper->getExchangeOnDate(
-            date('Y-m-d', strtotime($date . ' -1 day'))
+            date('Y-m-d', strtotime($date . ' -1 day')),
+            true
         );
 
 
 
-        return ($exchangeHelper->calculation($exchanges, $exchangesBeforeTradeDay))
+        return ($exchangeHelper->insert($exchanges, $exchangesBeforeTradeDay))
             ? response()->json(['success'=> true])
             : response()->json(['success'=> false, 'message' => 'Возникла ошибка']);
     }

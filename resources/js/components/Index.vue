@@ -45,13 +45,15 @@
                         </select>
                     </div>
                 </div>
+                <div class="row">
+                    <h2>Центральный банк Российской Федерации установил с {{ new Date(dateShow).toLocaleDateString('ru-RU') }} следующие курсы валют</h2>
+                </div>
                 <div class="row pb-4 pt-4">
                     <table class="table table-striped table-sm mt-4">
                         <thead>
                         <tr>
                             <th>Цифр. код</th>
                             <th>Букв. код</th>
-                            <th>Единиц</th>
                             <th>Валюта</th>
                             <th>Курс</th>
                         </tr>
@@ -77,14 +79,15 @@ export default {
     name: "Index",
     data() {
         return {
-            dateDownload: new Date().toISOString().slice(0, 10),
-            dateShow: new Date().toISOString().slice(0, 10),
+            dateDownload: '',
+            dateShow: '',
             currency: 'RUB',
             currencyOptions: [],
         };
     },
     mounted(){
         this.getCurrenciesOptions();
+        this.getTomorrowDate();
     },
     methods: {
         downloadExchange() {
@@ -120,6 +123,15 @@ export default {
                 })
                 .finally(() => {
                 });
+        },
+        getTomorrowDate() {
+            // Дата текущего дня.
+            const today = new Date();
+
+            today.setDate(today.getDate() + 1);
+
+            this.dateDownload = today.toISOString().slice(0, 10)
+            this.dateShow = today.toISOString().slice(0, 10)
         }
     },
 }

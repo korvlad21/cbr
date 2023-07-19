@@ -19,7 +19,7 @@ class ExchangeHelper
     /**
      * @return array
      */
-    public function getExchangeOnDate(string $date): array
+    public function getExchangeOnDate(string $date, bool $beforeTradeDay = false): array
     {
         try {
             $formattedDate = Carbon::parse($date)->format('d/m/Y');
@@ -27,9 +27,15 @@ class ExchangeHelper
             if ($response->successful()) {
                 $xml = simplexml_load_string($response->body());
                 $exchanges = [];
-                $arrayDate = (array)$xml->attributes()['Date'];
-                $date = $arrayDate[0];
 
+                if ($beforeTradeDay) {
+                    $getResponseDate = (array)$xml->attributes()['Date'];
+                    $responseDate = Carbon::parse($getResponseDate[0])->format('Y-m-d');
+                }
+
+                if (isset($responseDate) && $date !== $responseDate) {
+                    return $this->getExchangeOnDate(date('Y-m-d', strtotime($responseDate . ' -1 day')));
+                }
                 foreach ($xml->Valute as $valute) {
 
                     $exchanges[(string)$valute->CharCode] = [
@@ -54,14 +60,16 @@ class ExchangeHelper
     /**
      * @return array
      */
-    public function calculation(array $exchanges, array $exchangesBeforeTradeDay): bool
+    public function insert(array $exchanges, array $exchangesBeforeTradeDay): bool
     {
         try {
+
             foreach ($exchanges as $charCode => $exchange) {
                 $exchange['difference'] = $this->getDifference($exchange, $exchangesBeforeTradeDay[$charCode]);
-                dd($exchange);
                 $this->exchangeRepository->updateOrCreate($exchange);
             }
+            return true;
+
         } catch (\Throwable $e) {
             dd($e);
             return false;
