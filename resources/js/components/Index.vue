@@ -40,17 +40,9 @@
                                 :value="currencyOption.charCode"
                                 :key="currencyOption.charCode"
                             >
-                                {{ currencyOption.charCode }}
+                                {{ currencyOption.charCode }} - ({{currencyOption.name}})
                             </option>
                         </select>
-                    </div>
-                    <div class="col-3 d-flex flex-column">
-                        <button
-                        class="btn btn-primary mt-auto"
-                        @click="downloadExchange"
-                    >
-                        Отобразить
-                    </button>
                     </div>
                 </div>
                 <div class="row pb-4 pt-4">
@@ -85,8 +77,8 @@ export default {
     name: "Index",
     data() {
         return {
-            dateDownload: '',
-            dateShow: '',
+            dateDownload: new Date().toISOString().slice(0, 10),
+            dateShow: new Date().toISOString().slice(0, 10),
             currency: 'RUB',
             currencyOptions: [],
         };

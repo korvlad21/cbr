@@ -19,38 +19,60 @@ class ExchangeHelper
     /**
      * @return array
      */
-    public function getExchangeOnDate(string $date): bool
+    public function getExchangeOnDate(string $date): array
     {
         try {
-
-
             $formattedDate = Carbon::parse($date)->format('d/m/Y');
             $response = Http::get("https://www.cbr.ru/scripts/XML_daily.asp?date_req={$formattedDate}");
-
             if ($response->successful()) {
                 $xml = simplexml_load_string($response->body());
-
                 $exchanges = [];
+                $arrayDate = (array)$xml->attributes()['Date'];
+                $date = $arrayDate[0];
 
                 foreach ($xml->Valute as $valute) {
 
-                    $exchange = [
+                    $exchanges[(string)$valute->CharCode] = [
                         'date' => $date,
                         'charCode' => (string)$valute->CharCode,
                         'nominal' => (int)$valute->Nominal,
                         'rate' => (float)str_replace(',', '.', $valute->Value),
                     ];
-                    $this->exchangeRepository->updateOrCreate($exchange);
 
                 }
-                return true;
+                return $exchanges;
             } else {
-                return false;
+                return [];
             }
         }
         catch (\Throwable $e) {
             dd($e);
+            return [];
+        }
+    }
+
+    /**
+     * @return array
+     */
+    public function calculation(array $exchanges, array $exchangesBeforeTradeDay): bool
+    {
+        try {
+            foreach ($exchanges as $charCode => $exchange) {
+                $exchange['difference'] = $this->getDifference($exchange, $exchangesBeforeTradeDay[$charCode]);
+                dd($exchange);
+                $this->exchangeRepository->updateOrCreate($exchange);
+            }
+        } catch (\Throwable $e) {
+            dd($e);
             return false;
         }
+    }
+
+    /**
+     * @return float
+     */
+    public function getDifference(array $exchanges, array $exchangesBeforeOneDay): float
+    {
+        return $exchangesBeforeOneDay['nominal'] * $exchangesBeforeOneDay['rate'] - $exchanges['nominal'] * $exchanges['rate'];
     }
 }

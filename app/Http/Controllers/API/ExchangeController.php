@@ -45,7 +45,15 @@ class ExchangeController extends Controller
 
         $exchangeHelper = new ExchangeHelper($this->exchangeRepository);
 
-        return ($exchangeHelper->getExchangeOnDate($date))
+        $exchanges = $exchangeHelper->getExchangeOnDate($date);
+
+        $exchangesBeforeTradeDay = $exchangeHelper->getExchangeOnDate(
+            date('Y-m-d', strtotime($date . ' -1 day'))
+        );
+
+
+
+        return ($exchangeHelper->calculation($exchanges, $exchangesBeforeTradeDay))
             ? response()->json(['success'=> true])
             : response()->json(['success'=> false, 'message' => 'Возникла ошибка']);
     }
