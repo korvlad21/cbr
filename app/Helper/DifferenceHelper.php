@@ -15,6 +15,7 @@ class DifferenceHelper
     {
         $this->roundHelper = new RoundHelper();
     }
+
     /**
      * @param array $exchanges
      * @param array $exchangesBeforeOneDay
@@ -22,20 +23,17 @@ class DifferenceHelper
      */
     public function getDifference(array $exchanges, array $exchangesBeforeOneDay): float
     {
-        return $this->roundHelper->getRound($exchanges['rate'] / $exchanges['nominal']
-            - $exchangesBeforeOneDay['rate'] / $exchangesBeforeOneDay['nominal']);
+        return $this->roundHelper->getRound($exchanges['rate'] - $exchangesBeforeOneDay['rate']);
     }
 
     /**
-     * @param array $exchanges
-     * @param array $exchangesBeforeOneDay
+     * @param Exchange $rateCurrencyDivisionRub
      * @return float
      */
     public function getDifferenceRub(Exchange $rateCurrencyDivisionRub): float
     {
-        return $this->roundHelper->getRound(1 / ($rateCurrencyDivisionRub->rate / $rateCurrencyDivisionRub->nominal) -
-            1 / ($rateCurrencyDivisionRub->rate / $rateCurrencyDivisionRub->nominal
-                - $rateCurrencyDivisionRub->difference));
+        return $this->roundHelper->getRound(1 / $rateCurrencyDivisionRub->rate  -
+            1 / ($rateCurrencyDivisionRub->rate - $rateCurrencyDivisionRub->difference));
     }
 
     /**
@@ -45,9 +43,9 @@ class DifferenceHelper
      */
     public function getDifferenceAnotherCurrency(Exchange $exchangeRate, Exchange $rateCurrencyDivisionRub): float
     {
-        $rate = ($exchangeRate->rate / $exchangeRate->nominal) / ($rateCurrencyDivisionRub->rate / $rateCurrencyDivisionRub->nominal);
-        $rateBeforeTradeDay = ($exchangeRate->rate / $exchangeRate->nominal - $exchangeRate->difference)
-            / ($rateCurrencyDivisionRub->rate / $rateCurrencyDivisionRub->nominal - $rateCurrencyDivisionRub->difference);
+        $rate = $exchangeRate->rate / $rateCurrencyDivisionRub->rate;
+        $rateBeforeTradeDay = ($exchangeRate->rate - $exchangeRate->difference)
+            / ($rateCurrencyDivisionRub->rate - $rateCurrencyDivisionRub->difference);
         return $this->roundHelper->getRound($rate - $rateBeforeTradeDay);
     }
 

@@ -49,8 +49,9 @@ class ExchangeHelper
                     $exchanges[(string)$valute->CharCode] = [
                         'date' => $date,
                         'charCode' => (string)$valute->CharCode,
-                        'nominal' => (int)$valute->Nominal,
-                        'rate' => (float)str_replace(',', '.', $valute->Value),
+                        'rate' => $this->roundHelper->getRound(
+                            (float)str_replace(',', '.', $valute->Value) / (int)$valute->Nominal
+                        ),
                     ];
 
                 }
@@ -125,9 +126,9 @@ class ExchangeHelper
     }
 
     /**
-     * @param Collection $exchangeRates
+     * @param Collection $exchangesRates
      * @param string $currency
-     * @return float
+     * @return array
      */
     private function convertCurrencyExchange(Collection $exchangesRates, string $currency): array
     {
@@ -147,15 +148,15 @@ class ExchangeHelper
     }
 
     /**
-     * @param Collection $rateCurrencyDivisionRub
-     * @return float
+     * @param Exchange $rateCurrencyDivisionRub
+     * @return array
      */
     private function getRevertCurrency(Exchange $rateCurrencyDivisionRub): array
     {
         return [
             'charCode' => Currency::CHARCODE_RUB,
             'nominal' => 1,
-            'rate' => $this->roundHelper->getRound(1 / ($rateCurrencyDivisionRub->rate / $rateCurrencyDivisionRub->nominal)),
+            'rate' => $this->roundHelper->getRound(1 / $rateCurrencyDivisionRub->rate),
             'difference' => $this->differenceHelper->getDifferenceRub($rateCurrencyDivisionRub),
             'currency' => [
                 'numCode' => Currency::NUMCODE_RUB,
@@ -165,7 +166,7 @@ class ExchangeHelper
     }
 
     /**
-     * @param Collection $rateCurrencyDivisionRub
+     * @param Exchange $rateCurrencyDivisionRub
      * @param Exchange $exchangeRate
      * @return array
      */
@@ -175,7 +176,7 @@ class ExchangeHelper
         return [
             'charCode' => $exchangeRate->charCode,
             'nominal' => 1,
-            'rate' =>  $this->roundHelper->getRound(($exchangeRate->rate / $exchangeRate->nominal) / ($rateCurrencyDivisionRub->rate / $rateCurrencyDivisionRub->nominal)),
+            'rate' =>  $this->roundHelper->getRound($exchangeRate->rate / $rateCurrencyDivisionRub->rate),
             'difference' => $this->differenceHelper->getDifferenceAnotherCurrency($exchangeRate, $rateCurrencyDivisionRub),
             'currency' => [
                 'numCode' => $exchangeRate->currency->numCode,
@@ -185,6 +186,9 @@ class ExchangeHelper
     }
 
     /**
+     * @param string $date
+     * @param string $responseDate
+     * @return string
      * @throws \Exception
      */
     private function getBeforeDate(string $date, string $responseDate): string

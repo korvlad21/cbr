@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\CurrencyResource;
 use App\Repositories\CurrencyRepositoryInterface;
 use App\Repositories\ExchangeRepositoryInterface;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -19,12 +20,11 @@ class CurrencyController extends Controller
     {
         $this->currencyRepository = $currencyRepository;
     }
+
     /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function get()
+    public function get():JsonResponse
     {
         $currencyOptions = $this->currencyRepository->getAll();
 

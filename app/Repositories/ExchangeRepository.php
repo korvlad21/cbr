@@ -13,17 +13,6 @@ class ExchangeRepository implements ExchangeRepositoryInterface
         $this->model = $model;
     }
 
-
-    public function getByСharCodeAndDate(string $date, string $charCode)
-    {
-        return $this->model->where([['date' => $date],['charCode' => $charCode]]);
-    }
-
-    public function create(array $data)
-    {
-        $this->model->created($data);
-    }
-
     public function updateOrCreate(array $data)
     {
         $this->model->updateOrCreate([

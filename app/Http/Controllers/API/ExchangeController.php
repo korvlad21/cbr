@@ -4,12 +4,15 @@ namespace App\Http\Controllers\API;
 
 use App\Helper\ExchangeHelper;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ExchangeDownloadRequest;
+use App\Http\Requests\ExchangeGetRatesRequest;
 use App\Http\Resources\CurrencyResource;
 use App\Http\Resources\ExchangeResource;
 use App\Models\Event;
 use App\Repositories\ExchangeRepository;
 use App\Repositories\ExchangeRepositoryInterface;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -25,21 +28,13 @@ class ExchangeController extends Controller
     {
         $this->exchangeRepository = $exchangeRepository;
     }
+
     /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\JsonResponse
+     * @param ExchangeDownloadRequest $request
+     * @return JsonResponse
      */
-    public function download(Request $request)
+    public function download(ExchangeDownloadRequest $request):JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'date' => 'required|date',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['success'=> false, 'errors' => $validator->errors()]);
-        }
-
         $date = $request->input('date');
 
         Cache::delete('exchange_rates_'.$date);
@@ -56,17 +51,13 @@ class ExchangeController extends Controller
             ? response()->json(['success'=> true])
             : response()->json(['success'=> false, 'message' => 'Возникла ошибка']);
     }
-    public function getRates(Request $request)
+
+    /**
+     * @param ExchangeGetRatesRequest $request
+     * @return JsonResponse
+     */
+    public function getRates(ExchangeGetRatesRequest $request):JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'date' => 'required|date',
-            'currency' => 'required|string'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['success'=> false, 'errors' => $validator->errors()]);
-        }
-
         $date = $request->input('date');
         $currency = $request->input('currency');
 

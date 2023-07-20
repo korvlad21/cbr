@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Helper\RoundHelper;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -18,7 +19,7 @@ class ExchangeResource extends JsonResource
             'charCode' => $this['charCode'],
             'name' => $this['currency']['name'],
             'numCode' => $this['currency']['numCode'],
-            'rate' => $this['rate'] / $this['nominal'],
+            'rate' => $this['rate'],
             'difference' => $this['difference'],
         ];
     }

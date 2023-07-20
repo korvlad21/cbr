@@ -12,11 +12,6 @@ class CurrencyRepository implements CurrencyRepositoryInterface
     {
         $this->model = $model;
     }
-
-    public function getByCharCode($charCode)
-    {
-        return $this->model->find($charCode);
-    }
     public function getAll()
     {
         return $this->model->all();
@@ -28,16 +23,4 @@ class CurrencyRepository implements CurrencyRepositoryInterface
         $this->model->create($data);
     }
 
-    public function update($charCode, array $data)
-    {
-        $currency = $this->getByCharCode($charCode);
-        $currency->update($data);
-        return $currency;
-    }
-
-    public function delete($charCode)
-    {
-        $currency = $this->getByCharCode($charCode);
-        return $currency->delete();
-    }
 }

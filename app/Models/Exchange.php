@@ -16,7 +16,6 @@ class Exchange extends Model
     protected $fillable = [
         'date',
         'charCode',
-        'nominal',
         'rate',
         'difference'
     ];
