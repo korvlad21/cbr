@@ -16,10 +16,10 @@ class ExchangeResource extends JsonResource
     {
         return [
             'charCode' => $this['charCode'],
-            'name' => $this['name'],
-            'numCode' => $this['numCode'],
-            'rate' => round($this['rate'] / $this['nominal'], 4),
-            'difference' => round($this['difference'],4)
+            'name' => $this['currency']['name'],
+            'numCode' => $this['currency']['numCode'],
+            'rate' => $this['rate'] / $this['nominal'],
+            'difference' => $this['difference'],
         ];
     }
 }

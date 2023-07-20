@@ -8,7 +8,11 @@
                 <div class="row">
                     <div class="col-4">
                         <span>Дата для загрузки курса</span>
-                        <input v-model="dateDownload" type="date" class="form-control" />
+                        <input
+                            v-model="dateDownload"
+                            max=""
+                            type="date"
+                            class="form-control" />
                     </div>
                     <div class="col-4 d-flex flex-column">
                         <button
@@ -63,9 +67,9 @@
                             <tr
                                 v-for="exchangeRate in exchangeRates"
                             >
-                                <th>{{exchangeRate['currency']['numCode']}}</th>
+                                <th>{{exchangeRate['numCode']}}</th>
                                 <th>{{exchangeRate['charCode']}}</th>
-                                <th>{{exchangeRate['currency']['name']}}</th>
+                                <th>{{exchangeRate['name']}}</th>
                                 <th>
                                     {{exchangeRate['rate']}} ({{(0 < exchangeRate['difference']) ? '+' : ''}}{{exchangeRate['difference']}})
                                 </th>
@@ -92,6 +96,7 @@ export default {
         return {
             dateDownload: '',
             dateShow: '',
+            maxDate: '',
             currency: 'RUB',
             currencyOptions: [],
             exchangeRates: [],
@@ -148,6 +153,7 @@ export default {
 
             this.dateDownload = today.toISOString().slice(0, 10)
             this.dateShow = today.toISOString().slice(0, 10)
+
         },
     },
 }

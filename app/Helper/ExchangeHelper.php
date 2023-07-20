@@ -7,6 +7,7 @@ use App\Models\Currency;
 use App\Models\Exchange;
 use App\Repositories\ExchangeRepositoryInterface;
 use Carbon\Carbon;
+use DateTime;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -15,10 +16,14 @@ class ExchangeHelper
 {
 
     protected ExchangeRepositoryInterface $exchangeRepository;
+    protected DifferenceHelper $differenceHelper;
+    protected RoundHelper $roundHelper;
 
     public function __construct(ExchangeRepositoryInterface $exchangeRepository)
     {
         $this->exchangeRepository = $exchangeRepository;
+        $this->differenceHelper = new DifferenceHelper();
+        $this->roundHelper = new RoundHelper();
     }
 
     /**
@@ -26,7 +31,7 @@ class ExchangeHelper
      * @param bool $beforeTradeDay
      * @return array
      */
-    public function getExchangeOnDate(string $date, bool $beforeTradeDay = false): array
+    public function getExchangeOnDate(string &$date, bool $beforeTradeDay = false): array
     {
         try {
             $formattedDate = Carbon::parse($date)->format('d/m/Y');
@@ -35,13 +40,9 @@ class ExchangeHelper
                 $xml = simplexml_load_string($response->body());
                 $exchanges = [];
 
-                if ($beforeTradeDay) {
+                if (!$beforeTradeDay) {
                     $getResponseDate = (array)$xml->attributes()['Date'];
                     $responseDate = Carbon::parse($getResponseDate[0])->format('Y-m-d');
-                }
-
-                if (isset($responseDate) && $date !== $responseDate) {
-                    return $this->getExchangeOnDate(date('Y-m-d', strtotime($responseDate . ' -1 day')));
                 }
                 foreach ($xml->Valute as $valute) {
 
@@ -53,12 +54,17 @@ class ExchangeHelper
                     ];
 
                 }
+                if (isset($responseDate)) {
+                    $date = $this->getBeforeDate($date, $responseDate);
+                }
+
                 return $exchanges;
             } else {
                 return [];
             }
         }
         catch (\Throwable $e) {
+            dump($e);
             return [];
         }
     }
@@ -71,26 +77,17 @@ class ExchangeHelper
     public function insert(array $exchanges, array $exchangesBeforeTradeDay): bool
     {
         try {
-
             foreach ($exchanges as $charCode => $exchange) {
-                $exchange['difference'] = $this->getDifference($exchange, $exchangesBeforeTradeDay[$charCode]);
+                $exchange['difference'] = $this->differenceHelper->getDifference($exchange, $exchangesBeforeTradeDay[$charCode]);
                 $this->exchangeRepository->updateOrCreate($exchange);
             }
+
             return true;
 
         } catch (\Throwable $e) {
+            dump($e);
             return false;
         }
-    }
-
-    /**
-     * @param array $exchanges
-     * @param array $exchangesBeforeOneDay
-     * @return float
-     */
-    private function getDifference(array $exchanges, array $exchangesBeforeOneDay): float
-    {
-        return $exchanges['rate'] / $exchanges['nominal'] - $exchangesBeforeOneDay['rate'] / $exchangesBeforeOneDay['nominal'];
     }
 
     /**
@@ -101,20 +98,28 @@ class ExchangeHelper
     public function getExchangeRates(string $date, string $currency): array
     {
         try {
-            $exchangeRates = $this->exchangeRepository->getOnDate($date)->toArray();
+            $exchangeRates = Cache::get('exchange_rates_'.$date);
+
+            if (!$exchangeRates) {
+                $exchangeRates = $this->exchangeRepository->getOnDate($date);
+                Cache::put(
+                    'exchange_rates_'.$date,
+                    $exchangeRates,
+                    60*60*24
+                );
+            }
 
             if (Currency::CHARCODE_RUB !== $currency) {
                 $exchangeRates = $this->convertCurrencyExchange($exchangeRates, $currency);
             }
 
-            Cache::put(
-                'exchange_rates_'.date('Y-m-d').'_currency_'.$currency,
-                ExchangeResource::collection($exchangeRates),
-                60*60*24
-            );
+            else {
+                $exchangeRates = $exchangeRates->toArray();
+            }
 
             return $exchangeRates;
         } catch (\Throwable $e) {
+            dump($e);
             dd($e);
         }
     }
@@ -124,12 +129,16 @@ class ExchangeHelper
      * @param string $currency
      * @return float
      */
-    private function convertCurrencyExchange(Collection $exchangeRates, string $currency): array
+    private function convertCurrencyExchange(Collection $exchangesRates, string $currency): array
     {
         $convertExchangeRates = [];
-        $rateCurrencyDivisionRub = $exchangeRates->where('charCode', $currency);
-        foreach ($exchangeRates as $exchangeRate) {
+        $rateCurrencyDivisionRub = $exchangesRates->where('charCode', $currency)->first();
 
+        if (!$rateCurrencyDivisionRub) {
+            return $convertExchangeRates;
+        }
+
+        foreach ($exchangesRates as $exchangeRate) {
             $convertExchangeRates[] = ($currency === $exchangeRate->charCode)
                 ? $this->getRevertCurrency($rateCurrencyDivisionRub)
                 : $this->getConvertCurrency($rateCurrencyDivisionRub, $exchangeRate);
@@ -141,13 +150,13 @@ class ExchangeHelper
      * @param Collection $rateCurrencyDivisionRub
      * @return float
      */
-    private function getRevertCurrency(Collection $rateCurrencyDivisionRub): array
+    private function getRevertCurrency(Exchange $rateCurrencyDivisionRub): array
     {
         return [
             'charCode' => Currency::CHARCODE_RUB,
             'nominal' => 1,
-            'rate' => 1 / ($rateCurrencyDivisionRub->rate / $rateCurrencyDivisionRub->nominal),
-            'difference' => 1 / $rateCurrencyDivisionRub->difference,
+            'rate' => $this->roundHelper->getRound(1 / ($rateCurrencyDivisionRub->rate / $rateCurrencyDivisionRub->nominal)),
+            'difference' => $this->differenceHelper->getDifferenceRub($rateCurrencyDivisionRub),
             'currency' => [
                 'numCode' => Currency::NUMCODE_RUB,
                 'name' => Currency::NAME_RUB
@@ -160,18 +169,40 @@ class ExchangeHelper
      * @param Exchange $exchangeRate
      * @return array
      */
-    private function getConvertCurrency(Collection $rateCurrencyDivisionRub, Exchange $exchangeRate): array
+    private function getConvertCurrency(Exchange $rateCurrencyDivisionRub, Exchange $exchangeRate): array
     {
+
         return [
             'charCode' => $exchangeRate->charCode,
             'nominal' => 1,
-            'rate' => ($rateCurrencyDivisionRub->rate / $rateCurrencyDivisionRub->nominal) / ($exchangeRate->rate / $exchangeRate->nominal),
-            'difference' => $rateCurrencyDivisionRub->difference / $exchangeRate->difference,
+            'rate' =>  $this->roundHelper->getRound(($exchangeRate->rate / $exchangeRate->nominal) / ($rateCurrencyDivisionRub->rate / $rateCurrencyDivisionRub->nominal)),
+            'difference' => $this->differenceHelper->getDifferenceAnotherCurrency($exchangeRate, $rateCurrencyDivisionRub),
             'currency' => [
                 'numCode' => $exchangeRate->currency->numCode,
                 'name' => $exchangeRate->currency->name
             ]
         ];
+    }
+
+    /**
+     * @throws \Exception
+     */
+    private function getBeforeDate(string $date, string $responseDate): string
+    {
+        if ($date === $responseDate) {
+            return date('Y-m-d', strtotime($date . ' -1 days'));
+        }
+
+        $days = 1;
+
+        $datetime1 = new DateTime($date);
+        $datetime2 = new DateTime($responseDate);
+
+        $interval = $datetime1->diff($datetime2);
+
+        $days += $interval->days;
+
+        return date('Y-m-d', strtotime($date . ' -'.$days.' days'));
     }
 
 

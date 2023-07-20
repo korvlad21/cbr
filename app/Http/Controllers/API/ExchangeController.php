@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Helper\ExchangeHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CurrencyResource;
+use App\Http\Resources\ExchangeResource;
 use App\Models\Event;
 use App\Repositories\ExchangeRepository;
 use App\Repositories\ExchangeRepositoryInterface;
@@ -41,11 +42,13 @@ class ExchangeController extends Controller
 
         $date = $request->input('date');
 
+        Cache::delete('exchange_rates_'.$date);
+
         $exchangeHelper = new ExchangeHelper($this->exchangeRepository);
 
         $exchanges = $exchangeHelper->getExchangeOnDate($date);
         $exchangesBeforeTradeDay = $exchangeHelper->getExchangeOnDate(
-            date('Y-m-d', strtotime($date . ' -1 day')),
+            $date,
             true
         );
 
@@ -70,7 +73,7 @@ class ExchangeController extends Controller
         $exchangeHelper = new ExchangeHelper($this->exchangeRepository);
 
         return response()->json([
-            'exchangeRates'=> $exchangeHelper->getExchangeRates($date, $currency),
+            'exchangeRates'=> ExchangeResource::collection($exchangeHelper->getExchangeRates($date, $currency)),
         ]);
     }
 
