@@ -5,9 +5,7 @@ namespace Database\Seeders;
 use App\Helper\CurrencyHelper;
 use App\Models\Currency;
 use App\Repositories\CurrencyRepositoryInterface;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Mockery\Exception;
 
 class CurrencySeeder extends Seeder
 {

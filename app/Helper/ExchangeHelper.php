@@ -2,7 +2,6 @@
 
 namespace App\Helper;
 
-use App\Http\Resources\ExchangeResource;
 use App\Models\Currency;
 use App\Models\Exchange;
 use App\Repositories\ExchangeRepositoryInterface;

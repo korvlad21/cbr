@@ -15,12 +15,10 @@ class CurrencyHelper
 
         if ($response->successful()) {
             $xmlData = $response->body();
-
-            // Преобразование XML в массив
             $xmlArray = simplexml_load_string($xmlData, 'SimpleXMLElement', LIBXML_NOCDATA);
             $json = json_encode($xmlArray);
             $currencies = json_decode($json, true);
-            // Получение информации о валютах
+
             $currenciesInfo = [];
             foreach ($currencies['Item'] as $currency) {
                 $currenciesInfo[] = [
@@ -29,8 +27,8 @@ class CurrencyHelper
                     'numCode' => $currency['ISO_Num_Code'],
                 ];
             }
-
             return $currenciesInfo;
+
         } else {
             return [];
 

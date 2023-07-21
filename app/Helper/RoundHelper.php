@@ -2,9 +2,6 @@
 
 namespace App\Helper;
 
-use App\Models\Exchange;
-use Illuminate\Support\Facades\Http;
-
 class RoundHelper
 {
 
