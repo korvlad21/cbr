@@ -11,5 +11,5 @@
 5. Запустите команду в терминале проекта: docker-compose up -d
 6. В новом терминале введите команду docker-compose exec laravel.test npm install
 7. В этом же терминале введите docker-compose exec laravel.test npm run build или docker-compose exec laravel.test npm run dev
-8. Запустите команде в терминале проекта: docker-compose exec laravel.test php artisan migrate --seed. Если по каким-то причинам выдало ошибку попробуйте: docker-compose exec laravel.test php artisan migrate:refresh --seed
+8. Запустите команду в терминале проекта: docker-compose exec laravel.test php artisan migrate --seed. Если по каким-то причинам выдало ошибку попробуйте: docker-compose exec laravel.test php artisan migrate:refresh --seed
 9. Перейдите по ссылке этой http://localhost/ либо по ссылке которая появится в терминале в ходе выполнения пункта 5.
