@@ -109,15 +109,9 @@ class ExchangeHelper
                 );
             }
 
-            if (Currency::CHARCODE_RUB !== $currency) {
-                $exchangeRates = $this->convertCurrencyExchange($exchangeRates, $currency);
-            }
-
-            else {
-                $exchangeRates = $exchangeRates->toArray();
-            }
-
-            return $exchangeRates;
+            return (Currency::CHARCODE_RUB !== $currency)
+                ? $this->convertCurrencyExchange($exchangeRates, $currency)
+                : $exchangeRates->toArray();
         } catch (\Throwable $e) {
             dump($e);
             dd($e);
