@@ -31,7 +31,7 @@
                             </option>
                         </select>
                     </div>
-                    <div class="col-4 d-flex flex-column">
+                    <div class="col-2 d-flex flex-column">
                         <button
                             class="btn btn-dark mt-auto"
                             @click="downloadExchange"
@@ -39,8 +39,19 @@
                             Загрузить курс валют по определённой дате
                         </button>
                     </div>
+                    <div class="col-2 d-flex flex-column">
+                        <button
+                            class="btn btn-dark mt-auto"
+                            @click="downloadExchangeAllDays"
+                        >
+                            Загрузить курс за последнии 180 дней
+                        </button>
+                    </div>
                 </div>
                 <div v-if="0 < exchangeRates.length" class="row pb-4 pt-4">
+                    <div class="row px-4">
+                        {{this.message}}
+                    </div>
                     <div class="row">
                         <h2>Центральный банк Российской Федерации установил с {{ new Date(date).toLocaleDateString('ru-RU') }} следующие курсы валют</h2>
                     </div>
@@ -89,6 +100,7 @@ export default {
             currency: 'RUB',
             currencyOptions: [],
             exchangeRates: [],
+            message: '',
         };
     },
     mounted(){
@@ -108,13 +120,24 @@ export default {
                     console.error(error);
                 });
         },
+        downloadExchangeAllDays() {
+            axios.post('/api/exchange/download_all_days')
+                .then(({data}) => {
+                    if (data.success) {
+                        this.message = data.message;
+                        console.log(this.message)
+                    }
+                })
+                .catch((error) => {
+                    console.error(error);
+                });
+        },
         getExchangeRates() {
             axios.post('/api/exchange/get_rates', {
                 date: this.date,
                 currency: this.currency
             })
                 .then(({data}) => {
-                    console.log(data)
                     this.exchangeRates = data.exchangeRates
                 })
                 .catch((error) => {
@@ -125,7 +148,6 @@ export default {
             axios.post('/api/currency/get')
                 .then(({data}) => {
                     this.currencyOptions = data.currencyOptions
-                    console.log(data)
                 })
                 .catch((error) => {
                     console.error(error);

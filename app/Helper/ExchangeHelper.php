@@ -18,6 +18,8 @@ class ExchangeHelper
     protected DifferenceHelper $differenceHelper;
     protected RoundHelper $roundHelper;
 
+    public const COUNT_DAYS_JOBS = 180;
+
     public function __construct(ExchangeRepositoryInterface $exchangeRepository)
     {
         $this->exchangeRepository = $exchangeRepository;
@@ -85,7 +87,7 @@ class ExchangeHelper
             return true;
 
         } catch (\Throwable $e) {
-            dump($e);
+
             return false;
         }
     }
@@ -99,7 +101,6 @@ class ExchangeHelper
     {
         try {
             $exchangeRates = Cache::get('exchange_rates_'.$date);
-
             if (!$exchangeRates) {
                 $exchangeRates = $this->exchangeRepository->getOnDate($date);
                 Cache::put(
