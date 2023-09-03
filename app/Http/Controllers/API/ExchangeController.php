@@ -60,7 +60,7 @@ class ExchangeController extends Controller
      */
     public function downloadAllDays():JsonResponse
     {
-        dispatch(new GenerateExchangesJob());
+        $this->dispatch(new GenerateExchangesJob());
         return response()->json([
             'success' => true,
             'message' => 'Вы поставили в очередь задачу для загрузки всех курсов за последние 180 дней!',
@@ -77,7 +77,7 @@ class ExchangeController extends Controller
         $date = $request->input('date');
         $currency = $request->input('currency');
 
-        $exchangeHelper = new ExchangeHelper($this->exchangeRepository);
+        $exchangeHelper = new ExchangeHelper();
 
         return response()->json([
             'exchangeRates'=> ExchangeResource::collection($exchangeHelper->getExchangeRates($date, $currency)),

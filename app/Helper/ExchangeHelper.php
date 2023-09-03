@@ -20,9 +20,9 @@ class ExchangeHelper
 
     public const COUNT_DAYS_JOBS = 180;
 
-    public function __construct(ExchangeRepositoryInterface $exchangeRepository)
+    public function __construct()
     {
-        $this->exchangeRepository = $exchangeRepository;
+        $this->exchangeRepository = app(ExchangeRepositoryInterface::class);
         $this->differenceHelper = new DifferenceHelper();
         $this->roundHelper = new RoundHelper();
     }
