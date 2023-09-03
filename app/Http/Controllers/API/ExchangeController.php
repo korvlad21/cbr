@@ -41,7 +41,7 @@ class ExchangeController extends Controller
 
         Cache::delete('exchange_rates_'.$date);
 
-        $exchangeHelper = new ExchangeHelper($this->exchangeRepository);
+        $exchangeHelper = new ExchangeHelper();
 
         $exchanges = $exchangeHelper->getExchangeOnDate($date);
         $exchangesBeforeTradeDay = $exchangeHelper->getExchangeOnDate(

@@ -21,7 +21,7 @@ class GenerateExchangeOneDayJob extends AbstractExchangeJob
         parent::__construct();
         $this->date = $date;
         $this->exchangeRepository = app(ExchangeRepositoryInterface::class);
-        $this->exchangeHelper = new ExchangeHelper($this->exchangeRepository);
+        $this->exchangeHelper = new ExchangeHelper();
     }
 
     /**
