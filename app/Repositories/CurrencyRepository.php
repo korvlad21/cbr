@@ -8,11 +8,11 @@ class CurrencyRepository implements CurrencyRepositoryInterface
 {
     protected Currency $model;
 
-    public function __construct(Currency $model)
+    public function __construct()
     {
-        $this->model = $model;
+        $this->model = new Currency();
     }
-    public function getAll()
+    public function getAll(): \Illuminate\Database\Eloquent\Collection
     {
         return $this->model->all();
     }

@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Helper\CurrencyHelper;
 use App\Models\Currency;
+use App\Repositories\CurrencyRepository;
 use App\Repositories\CurrencyRepositoryInterface;
 use Illuminate\Database\Seeder;
 
@@ -20,7 +21,7 @@ class CurrencySeeder extends Seeder
      */
     public function run(): void
     {
-        $currencyHelper = new CurrencyHelper();
+        $currencyHelper = new CurrencyHelper(new CurrencyRepository());
         $cbrCurrencies = $currencyHelper->getCurrenciesResponse();
         $cbrCurrencies[] = [
             'charCode' => Currency::CHARCODE_RUB,
