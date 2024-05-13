@@ -15,6 +15,7 @@ class CurrencyHelper
     {
         $this->currencyRepository = $currencyRepository;
     }
+
     /**
      * @return array
      */
@@ -33,10 +34,10 @@ class CurrencyHelper
             }
             return $currenciesInfo;
 
-        } else {
-            return [];
-
         }
+
+        return [];
+
     }
 
     public function getAll()

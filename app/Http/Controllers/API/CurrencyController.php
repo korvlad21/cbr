@@ -22,10 +22,8 @@ class CurrencyController extends Controller
     {
         $currencyHelper = new CurrencyHelper(new CurrencyRepository());
 
-        $currencyOptions = $currencyHelper->getAll();
-
         return response()->json([
-            'currencyOptions'=> CurrencyResource::collection($currencyOptions),
+            'currencyOptions'=> CurrencyResource::collection($currencyHelper->getAll()),
         ]);
     }
 }
