@@ -24,12 +24,6 @@ use Illuminate\Support\Facades\Validator;
 class ExchangeController extends Controller
 {
     use DispatchesJobs;
-    protected ExchangeRepositoryInterface $exchangeRepository;
-
-    public function __construct(ExchangeRepositoryInterface $exchangeRepository)
-    {
-        $this->exchangeRepository = $exchangeRepository;
-    }
 
     /**
      * @param ExchangeDownloadRequest $request

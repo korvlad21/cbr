@@ -8,9 +8,9 @@ class ExchangeRepository implements ExchangeRepositoryInterface
 {
     protected $model;
 
-    public function __construct(Exchange $model)
+    public function __construct()
     {
-        $this->model = $model;
+        $this->model = new Exchange();
     }
 
     public function updateOrCreate(array $data)

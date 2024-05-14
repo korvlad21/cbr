@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Helper\ExchangeHelper;
+use App\Repositories\ExchangeRepository;
 use App\Repositories\ExchangeRepositoryInterface;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -20,8 +21,8 @@ class GenerateExchangeOneDayJob extends AbstractExchangeJob
     {
         parent::__construct();
         $this->date = $date;
-        $this->exchangeRepository = app(ExchangeRepositoryInterface::class);
-        $this->exchangeHelper = new ExchangeHelper();
+        $this->exchangeRepository = new ExchangeRepository();
+        $this->exchangeHelper = new ExchangeHelper($this->exchangeRepository);
     }
 
     /**
