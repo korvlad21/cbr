@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Currency;
 use Database\Seeders\CurrencySeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
@@ -10,7 +11,7 @@ class CurrencyTest extends AbstractTest
 {
     public function test_get_currencies_db(): void
     {
-        $this->assertDatabaseHas('currencies', $this->usdCurrency);
+        $this->assertDatabaseHas(Currency::class, $this->usdCurrency);
     }
 
     /**

@@ -13,3 +13,6 @@
 7. В этом же терминале введите docker-compose exec laravel.test npm run build или docker-compose exec laravel.test npm run dev
 8. Запустите команду в терминале проекта: docker-compose exec laravel.test php artisan migrate --seed. Если по каким-то причинам выдало ошибку попробуйте: docker-compose exec laravel.test php artisan migrate:refresh --seed
 9. Перейдите по ссылке этой http://localhost/ либо по ссылке которая появится в терминале в ходе выполнения пункта 5.
+10. Для проверки тестов запустите команду docker-compose exec laravel.test php artisan test
+11. Для запуски очередей запустите команду docker-compose exec laravel.test php artisan queue:work --queue=generate-exchanges
+

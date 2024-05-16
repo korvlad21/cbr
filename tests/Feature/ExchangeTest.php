@@ -2,9 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Jobs\GenerateExchangesJob;
+use App\Models\Exchange;
 use Database\Seeders\CurrencySeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Facades\Queue;
 
 class ExchangeTest extends AbstractTest
 {
@@ -22,7 +25,7 @@ class ExchangeTest extends AbstractTest
         $response->assertJsonFragment([
             'success' => true
         ]);
-        $this->assertDatabaseHas('exchanges', [
+        $this->assertDatabaseHas(Exchange::class, [
             'date' => $date,
             'charCode' => 'USD',
         ]);
@@ -49,6 +52,20 @@ class ExchangeTest extends AbstractTest
         ]);
     }
 
+    /**
+     * A basic feature test example.
+     */
+    public function test_download_all_days_exchange(): void
+    {
+        $response = $this->postJson('/api/exchange/download_all_days');
+        $response->assertStatus(200);
+        $response->assertJsonFragment([
+            'success' => true
+        ]);
+        $this->assertEquals(180, Exchange::where('charCode', 'USD')->count());
+
+    }
+
     public function test_get_rates(): void
     {
         $date = date('Y-m-d');
@@ -59,7 +76,7 @@ class ExchangeTest extends AbstractTest
         $responseDownload->assertJsonFragment([
             'success' => true
         ]);
-        $this->assertDatabaseHas('exchanges', [
+        $this->assertDatabaseHas(Exchange::class, [
             'date' => $date,
             'charCode' => 'USD',
         ]);
