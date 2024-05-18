@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Helper\ExchangeHelper;
 use App\Jobs\GenerateExchangesJob;
 use App\Models\Exchange;
 use Database\Seeders\CurrencySeeder;
@@ -62,7 +63,7 @@ class ExchangeTest extends AbstractTest
         $response->assertJsonFragment([
             'success' => true
         ]);
-        $this->assertEquals(180, Exchange::where('charCode', 'USD')->count());
+        $this->assertEquals(ExchangeHelper::COUNT_DAYS_JOBS, Exchange::where('charCode', 'USD')->count());
 
     }
 

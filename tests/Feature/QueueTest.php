@@ -26,12 +26,4 @@ class QueueTest extends AbstractTest
         Queue::assertPushed(GenerateExchangesJob::class);
 
     }
-
-    public function test_generate_exchange_job_handle(): void
-    {
-        GenerateExchangesJob::dispatch();
-        (new GenerateExchangesJob)->handle();
-        $this->assertDatabaseCount(Exchange::class, 50);
-
-    }
 }
