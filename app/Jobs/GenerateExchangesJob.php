@@ -21,7 +21,7 @@ class GenerateExchangesJob extends AbstractExchangeJob
      */
     private function generateExhanges() :array {
         $generateExhanges = [];
-        for ($daysBefore = ExchangeHelper::COUNT_DAYS_JOBS; $daysBefore >= 0; $daysBefore--) {
+        for ($daysBefore = ExchangeHelper::COUNT_DAYS_JOBS - 1; $daysBefore >= 0; $daysBefore--) {
             $generateExhanges[] = new GenerateExchangeOneDayJob(
                 date('Y-m-d', strtotime("-{$daysBefore} days"))
             );
